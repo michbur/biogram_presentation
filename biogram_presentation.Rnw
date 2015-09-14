@@ -542,6 +542,14 @@ signalP 4.1 (no tm) \shortcite{petersen_signalp_2011} & 0.8356 & 0.7745 & 0.8966
 
 \end{frame}
 
+\section{Conclusion}
+
+\begin{frame}
+\textbf{biogram} is universal and efficient toolkit for analysis of biological sequences.
+\end{frame}
+
+
+
 \section{Availability}
 
 
