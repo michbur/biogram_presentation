@@ -1,0 +1,559 @@
+\documentclass[10pt]{beamer}
+\usetheme{Warsaw}
+\usepackage{graphicx}
+\usepackage[utf8]{inputenc}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage[notocbib]{apacite}
+\usepackage{booktabs}
+\usepackage{colortbl, xcolor}
+\usepackage{epstopdf}
+
+% rysunki
+\usepackage{tikz}
+\usepackage{ifthen}
+\usepackage{xxcolor}
+\usetikzlibrary{arrows}
+\usetikzlibrary[topaths]
+\usetikzlibrary{decorations.pathreplacing}
+
+
+\setbeamertemplate{caption}{\centering\insertcaption\par}
+\setlength{\belowcaptionskip}{15pt}
+\renewcommand{\thetable}{}
+
+\providecommand{\e}[1]{\ensuremath{\times 10^{#1}}}
+\begin{document}
+
+
+<<knitrIntro, echo = FALSE, message=FALSE>>=
+library(xtable)
+library(ggplot2)
+source("start.R")
+load(paste0(pathway, "crossval_full.RData"))
+load(paste0(pathway, "pub_evaluation.RData"))
+
+library(xtable)
+library(biogram)
+library(ggplot2)
+library(reshape2)
+
+size_mod = -1
+cool_theme <- theme(plot.background=element_rect(fill = "transparent",
+                                                 colour = "transparent"),
+                    panel.grid.major = element_line(colour="lightgrey", linetype = "dashed"),
+                    panel.background = element_rect(fill = "white",colour = "black"),
+                    legend.background = element_rect(fill="NA"),
+                    legend.position = "right",
+                    axis.text = element_text(size=12 + size_mod),
+                    axis.title.x = element_text(size=16 + size_mod, vjust = -1), 
+                    axis.title.y = element_text(size=16 + size_mod, vjust = 1),
+                    strip.text = element_text(size=17 + size_mod, face = "bold"),
+                    strip.background = element_rect(fill="lightsteelblue", colour = "black"),
+                    legend.text = element_text(size=13 + size_mod), 
+                    legend.title = element_text(size=17 + size_mod),
+                    plot.title = element_text(size=20 + size_mod))
+
+tfres <- function(x, cn = c("1-ngram", "2-gram", "3-gram"),
+                  rn = round(seq(from = 0.25, to = 0.91, length.out = 6), 2)) {
+  colnames(x) <- cn
+  rownames(x) <- rn
+  x <- melt(x)
+  #significant proportion, ngram, value
+  colnames(x) <- c("sig", "ngram", "value")
+  x[["sig"]] <- as.factor(x[["sig"]])
+  x
+}
+@
+
+
+\date{}
+\author{Michał  Burdukiewicz\inst{1}, Piotr Sobczyk\inst{2}, Małgorzata Kotulska\inst{3}, \\ Paweł Mackiewicz\inst{1}}
+\institute{\inst{1} University of Wrocław, Department of Genomics, Poland \and %
+\inst{2} Wrocław University of Technology, Institute of Mathematics and Computer Science, Poland \and
+\inst{3} Wrocław University of Technology, Department of Biomedical Engineering, Poland}
+
+\title{\textbf{biogram}: a toolkit for n-gram analysis}
+
+
+
+\begin{frame}
+\maketitle
+\end{frame}
+
+\begin{frame}
+\frametitle{Outline}
+\tableofcontents
+\end{frame}
+
+
+\AtBeginSection[]
+{
+\begin{frame}<beamer>
+\frametitle{Outline}
+\tableofcontents[currentsection]
+\end{frame}
+}
+
+\AtBeginSubsection[]
+{
+\begin{frame}<beamer>
+\frametitle{Outline}
+\tableofcontents[currentsection]
+\end{frame}
+}
+
+
+\section{Biological sequence analysis}
+
+\section{biogram}
+
+\begin{frame}
+
+Aim: convert \textbf{bio}logical sequences to n-\textbf{grams}, continuous or discontinuous sub-sequences.
+
+\end{frame}
+
+\subsection{n-grams}
+
+\begin{frame}
+
+<<echo = FALSE,message=FALSE,results='asis'>>=
+
+sample_seq <- matrix(sample(1L:4, 18, replace = TRUE), nrow = 3)
+print(xtable(data.frame(sample_seq), caption = "Sample sequences.", digits = 0))
+@
+\end{frame}
+
+\begin{frame}
+
+
+<<echo = FALSE,message=FALSE,results='asis'>>=
+unis <- count_ngrams(sample_seq, 1, 1L:4)
+unis <- data.frame(as.matrix(unis))
+colnames(unis) <- 1L:4
+print(xtable(unis, caption = "Unigrams.", digits = 0), include.rownames = FALSE)
+@
+\end{frame}
+
+\begin{frame}
+
+
+<<echo = FALSE,message=FALSE,results='asis'>>=
+unis <- count_ngrams(sample_seq, 1, 1L:4, pos = TRUE)
+unis <- data.frame(as.matrix(unis))[, 1L:7]
+print(xtable(unis, caption = "A fraction of possible unigrams with position information.", digits = 0), include.rownames = FALSE)
+@
+
+Positioned n-gram data is binary.
+
+\end{frame}
+
+\begin{frame}
+
+Number of possible positioned n-grams:
+
+$$
+n_{max} = L \times m^n
+$$
+\end{frame}
+
+\begin{frame}
+\centering
+\scalebox{0.75}{  
+<<echo = FALSE,message=FALSE,fig.align='center'>>=
+n <- 1:5
+n_max <- 4^n
+
+dat <- melt(sapply(2:5*5, function(i) i * n_max))
+dat[["Var2"]] <- factor(dat[["Var2"]])
+levels(dat[["Var2"]]) <- 2:5*5
+colnames(dat) <- c("n", "L", "n_max")
+ggplot(dat, aes(x = n, y = n_max, fill = L, col = L)) + 
+  geom_line(linetype="dotted", size=1.5) + 
+  geom_point(size=7, shape=21) +
+  scale_x_continuous(breaks = 0L:6) +
+  cool_theme
+
+@
+}
+\end{frame}
+
+
+
+\begin{frame}
+Encodings based on n-grams are cumbersome to use without the reduction of the dimensionality.
+\medskip
+Solutions:
+\begin{itemize}
+\item Reduce alphabet (in case of amino acid sequences).
+\item Filter features.
+\end{itemize}
+\end{frame}
+
+
+\subsection{Encoding of amino acids}
+
+\begin{frame}
+Existing encodings of amino acids:
+\begin{itemize}
+\item Orthogonal (20 bites).
+\item Orthogonal (5 bites).
+\item Codon.
+\item Exchange groups.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+Drawbacks:
+\begin{itemize}
+\item Does not take into account relationships between amino acids (orthogonal encodings) or uses all avaible information introducing noise (codon and exchange group).
+\item parse encoding enforces larger data sets, which hinders their management and analysis~\cite{2002linamino}.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+Amino acids may be assigned to groups based on their physicochemical similarity.
+
+Every problem may have its own set of important physicochemical properties. 
+\end{frame}
+
+
+\begin{frame}
+
+The encoding distance between \textbf{A} and \textbf{B} is defined as the minimum number of amino acids that have to be shifted between subgroups of encoding \textbf{A} to make it identical to \textbf{B} (order of subgroups in the encoding and amino acids in a group is unimportant).
+
+\begin{columns}
+\column{.4\textwidth}
+<<encodingDistanceA, echo = FALSE, message=FALSE, results='asis'>>=
+enc2df <- function(x)
+  data.frame(Group = names(x), Elements = sapply(x, paste0, collapse = ", "))
+l1 <- list('1' = c("a", "b", "c"),
+             '2' = c("d", "e"))
+l2 <- list('1' = c("a", "b"),
+             '2' = c("d", "e"),
+            '3' = c("c"))
+tmp <- enc2df(l1)
+rws <- seq(1, nrow(tmp) - 1, by = 2)
+col <- rep("\\rowcolor[gray]{0.75}", length(rws))
+print(xtable(tmp, "Encoding \\textbf{A}.", align = "cc|l"), include.rownames = FALSE, booktabs = TRUE, add.to.row = list(pos = as.list(rws), command = col))
+@
+\column{.4\textwidth}
+
+<<encodingDistanceB, echo = FALSE, message=FALSE, results='asis'>>=
+tmp <- enc2df(l2)
+rws <- seq(1, nrow(tmp) - 1, by = 2)
+col <- rep("\\rowcolor[gray]{0.75}", length(rws))
+print(xtable(tmp, "Encoding \\textbf{B}.", align = "cc|l"), include.rownames = FALSE, booktabs = TRUE, add.to.row = list(pos = as.list(rws), command = col))
+@
+\end{columns}
+
+The encoding distance between \textbf{A} and \textbf{B} is 1 (element \textit{c} must be moved from Group 3 to Group 1).
+
+\end{frame}
+
+\subsection{Quick Permutation Test (QuiPT)}
+
+\begin{frame}
+\begin{enumerate}
+\item Calculate test statistic for the given positioned n-gram and etiquettes ($T_R$).
+\item Permute counts of n-grams and calculate permuted test statistic  ($T_P$).  
+\item Repeat step 2. N times.  
+\item Calculate p-value using:
+$$\textnormal{p-value} = \frac{N_{T_P > T_R}}{N}$$
+$N_{T_P > T_R}$ is number of times when $T_P$ was bigger than $T_R$
+\end{enumerate}
+\end{frame}
+
+\begin{frame}
+Advantages:
+\begin{itemize}
+\item<1-> Model independent.
+\item<2-> Statistic independent.  
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+Drawbacks:
+\begin{itemize}
+\item<1-> Computationally expensive (number of cases, number of features).
+\item<2-> Single feature analysis (no feature interaction).  
+\item<3-> Unfeasible precise estimation of low p-values (the number of permutations is inversely proportional to the interval between p-values).  
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+The binary positioned n-gram data tabulated by binary label can be easily described in 2d 
+contingency table.
+\end{frame}
+
+\begin{frame}
+
+\begin{table}
+\begin{tabular}{c || c c }
+sequence ID & feature    & target   &  \\ \hline
+1 & 1 & 0 &  \\ 
+2 & 1 & 0 & \\ 
+3 & 0 & 0 & \\ 
+4 & 1 & 1 & \\ 
+5 & 0 & 1 & \\ 
+\ldots & \ldots & \ldots & 
+\end{tabular}
+
+\caption{Positioned n-grams with a label.}
+\end{table}
+
+\end{frame}
+
+
+\begin{frame}
+
+\begin{table}
+\begin{tabular}{c || c c }
+  & target    & feature   &  \\ \hline \hline
+0 & $n_{1,1}$ & $n_{1,0}$ &  \\ 
+1 & $n_{0,1}$ & $n_{0,0}$ & 
+\end{tabular}
+
+\caption{Contingency table.}
+\end{table}
+
+\end{frame}
+
+\begin{frame}
+
+Test statistics used by QuiPT (information gain, Kullback-Leibler divergence) measure inbalance of contingency tables.
+
+\end{frame}
+
+\begin{frame}
+If probability that target equals 1 is $p$ and probability that feature equals
+1 is $q$ and feature and target are independent then each of them has the 
+following probabilities 
+$$P(Target, Feature) = (1,1)) = p \cdot q$$
+$$P(Target, Feature) = (1,0)) = p \cdot (1-q)$$
+$$P(Target, Feature) = (0,1)) = (1-p) \cdot q$$
+$$P(Target, Feature) = (0,0)) = (1-p) \cdot (1-q)$$
+\end{frame}
+
+
+\begin{frame}
+\begin{itemize}
+\item<1-> $n_{1,1}$ is from range $[0,min(n_{\cdot, 1}, n_{1, \cdot})]$.
+\item<2-> The probability of certain contingency table is given as the conditional distribution, as impose restrictions on two parameters $n_{\cdot, 1} $ and $n_{1, \cdot}$.
+\item<3-> The test statistic is computed for each possible value of $n_{1,1}$.
+\item<4-> The distribution of test statistics under hypothesis that target and feature
+are independant is computed using values from 3. 
+\end{itemize}
+
+\end{frame}
+
+
+%' \begin{frame}
+%' 
+%' \begin{columns}[c] 
+%'     \column{.7\textwidth} 
+%'     \scalebox{0.95}{
+%' <<echo = FALSE,message=FALSE,fig.align='center'>>=
+%' target_feature <- create_feature_target(50, 50, 50, 50)
+%' tmp <- distr_crit(target = target_feature[,1], feature = target_feature[,2])
+%' plot(tmp)
+%' @
+%' }
+%' \column{.5\textwidth}
+%' <<echo = FALSE,message=FALSE,results='asis'>>=
+%' tab <- data.frame(table(target_feature[, 1], target_feature[, 2]))
+%' colnames(tab) <- c("Target", "Feature", "Freq")
+%' xtable(tab)
+%' @
+%'     \end{columns}
+%' \end{frame}
+
+\begin{frame}
+
+Advantages over permutation test
+\begin{itemize}
+\item<1-> Speed.
+\item<2-> Using the exact distribution of possible values of the criterion QuiPT yields precise small p-values without increasing the computation time.  
+\end{itemize}
+\end{frame}
+
+\section{Case study 1: amyloid prediction}
+
+\begin{frame}
+Amyloids:
+\begin{itemize}
+\item<1-> short proteins associated with the number of clinical disorders, for example Alzheimer's or Creutzfeldt-Jakob’s diseases,
+\item<2-> create harmful zipper-like β-structures through characteristic short subsequences of amino acids (hot-spots).
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+
+\begin{enumerate}[1.]
+\item<1-> Nine scales representing properties important in the amylogenicity: hydrophobicity, size polarity and solvent accessibility from AAIndex database~\cite{kawashima_aaindex:_2008} were chosen. Additionally, two frequencies of forming contact sites~\cite{wozniak_characteristics_2014} were added. All scales were normalized.
+\item<2-> All combinations of characteristics (each time selecting only one scale per the property) were clustered using Euclidean distance and Ward's method.
+\item<3-> Each clustering was divided into 3 to 6 groups creating 144 encodings of amino acids.
+\item<4-> Redundant 51 encodings (identical to other encodings) were removed.
+\end{enumerate}
+
+\end{frame}
+
+\begin{frame}
+
+\begin{enumerate}[1.]
+\item<1-> Sequences shorter than 6 amino acids were discarded.
+\item<2-> From each sequence overlapping 6-grams were extracted. All n-grams were labelled as their sequence of the origin (e.g. all 5-grams extracted from amyloid sequence were labelled as positive).
+\item<3-> For each encoding features were filtered by the QuiPT and used to train the Random Forests~\cite{liaw_classification_2002}. This procedure was performed independently on three training sets: a) 6 amino acids, b) 10 amino acids or shorter, c) 15 amino acids or shorter creating three classifiers.
+\item<4-> All classifiers were evaluated in the 5-fold cross-validation eight times. The sequence was labelled as positive (amylogenic), if at least one 5-gram was assessed as amylogenic.
+\end{enumerate}
+
+\end{frame}
+
+\begin{frame}
+\begin{table}[ht]
+\centering
+\small{
+\begin{tabular}{c|c|c|c|c|c}
+  \toprule
+Training length & Number of groups & ID & AUC & Specificity & Sensitivity \\ 
+  \midrule
+6 & 3 & 6 & 0.7955 & 0.8221 & 0.6181 \\ 
+   \rowcolor[gray]{0.75}6 & 4 & 45 & 0.8183 & 0.9014 & 0.5038 \\ 
+  $<$11 & 4 & 2 & 0.6615 & 0.4304 & 0.8307 \\ 
+   \rowcolor[gray]{0.75}$<$11 & 3 & 15 & 0.8088 & 0.8329 & 0.6060 \\ 
+  $<$16 & 3 & 16 & 0.8162 & 0.7477 & 0.7374 \\ 
+   \rowcolor[gray]{0.75}$<$16 & 6 & 87 & 0.8320 & 0.5186 & 0.9195 \\ 
+   \bottomrule
+\end{tabular}
+}
+\caption{Encodings with the best sensitivity and specificity for each training set type.} 
+\end{table}
+\end{frame}
+
+\begin{frame}
+The best specificity encoding (training length 6, 4 groups, encoding ID 45) and the best sensitivity (training length $<$16, 6 groups, encoding ID 87) seem to have the different areas of the competence.
+
+The committee of the best specificity and best sensitivity classifiers has overall $0.8911$ AUC, $0.7473$ sensitivity and $0.8684$ specificity.
+\end{frame}
+
+\section{Case study 2: signal peptide prediction}
+
+
+\begin{frame}
+Secretory signal peptides:
+\begin{itemize}
+\item<1-> are short (20-30 residues) N-terminal amino acid sequences,
+\item<2-> direct a protein to the endomembrane system and next to the extracellular localization,
+\item<3-> possess three distinct domains with variable length and specific amino acid composition~\cite{hegde_surprising_2006}.
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}
+\begin{figure}[ht]
+\centering
+\scalebox{0.53}{
+\includegraphics{SP.png}
+}
+\caption{\large{Organization of signal peptide}}
+\end{figure}
+
+\end{frame}
+
+\begin{frame}
+Hidden semi-Markov models assumptions~\cite{rabiner, koski2001hidden}:
+\begin{itemize}
+\item<1-> the current region (state) of the sequence (process) depends on the previous region,
+\item<2-> regions may be only indirectly determined using amino acid residues (observations),
+\item<3-> probability of staying in a region is modeled by a probability distribution.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\begin{figure}[ht]
+\caption{\large{signalHsmm predictive model}}
+\centering
+\scalebox{0.4}{
+\includegraphics{HSMMs.png}
+}
+\end{figure}
+
+During the test phase, each protein was fitted to two models. The outcome consists of   probabilities that a particular residue belongs to a given model and predicted cleavage site.
+\end{frame}
+
+\begin{frame}
+\begin{table}[ht]
+\small
+\begin{minipage}{.5\linewidth} 
+\centering
+\caption{The best sensitivity (final) encoding.} 
+\begin{tabular}{l}
+  \toprule
+Groups \\ 
+  \midrule
+D, E, H, K, N, Q, R \\ 
+   \rowcolor[gray]{0.85}G, P, S, T, Y \\ 
+  F, I, L, M, V, W \\ 
+   \rowcolor[gray]{0.85}A, C \\ 
+   \bottomrule
+\end{tabular}
+\label{tab:best}
+\end{minipage}
+\begin{minipage}{.5\linewidth} 
+\centering
+\caption{The best specificity encoding.} 
+\begin{tabular}{l}
+  \toprule
+Groups \\ 
+  \midrule
+A, E, K, Q, R \\ 
+   \rowcolor[gray]{0.85}D, G, N, P, S, T \\ 
+  C, H, I, L, M, V \\ 
+   \rowcolor[gray]{0.85}F, W, Y \\ 
+   \bottomrule
+\end{tabular}
+\label{tab:worst}
+\end{minipage}
+\end{table}
+\end{frame}
+
+\begin{frame}
+\begin{table}[ht]
+\centering
+\caption{Comparison of Area Under the Curve, H-measure and Matthews Correlation Coefficient for different classifiers considering only proteins belonging to Plasmodiidae.} 
+\small{
+\begin{tabular}{lrrrr}
+  \toprule
+Software name & AUC & Sensitivity & Specificity \\ 
+  \midrule
+signalP 4.1 (no tm) \shortcite{petersen_signalp_2011} & 0.8356 & 0.7745 & 0.8966 \\ 
+   \rowcolor[gray]{0.85}signalP 4.1 (tm) \shortcite{petersen_signalp_2011} & 0.7928 & 0.6471 & 0.9385 \\ 
+  PrediSi \shortcite{hiller_predisi:_2004} & 0.6597 & 0.3725 & 0.9469 \\ 
+   \rowcolor[gray]{0.85}Phobius \shortcite{kall_combined_2004} & 0.7963 & 0.6765 & 0.9162 \\ 
+  Philius \shortcite{reynolds_transmembrane_2008} & 0.7753 & 0.6176 & 0.9330 \\ 
+   \rowcolor[gray]{0.85}signalHsmm-2010 & \textbf{0.9340} & \textbf{1.0000} & 0.8436 \\ 
+  signalHsmm-1989 & 0.9326 & 0.9510 & \textbf{0.8631} \\ 
+   \bottomrule
+\end{tabular}
+}
+\label{tab:bench2010plas}
+\end{table}
+
+\end{frame}
+
+\section{Availability}
+
+
+\begin{frame}
+biogram R package: \url{http://cran.r-project.org/web/packages/biogram/}
+\end{frame}
+
+
+
+\begin{frame}[allowframebreaks]
+\bibliographystyle{apacite}
+\bibliography{document.bib}
+\end{frame}
+
+\end{document}
