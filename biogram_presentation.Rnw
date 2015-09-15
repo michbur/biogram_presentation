@@ -68,7 +68,7 @@ tfres <- function(x, cn = c("1-ngram", "2-gram", "3-gram"),
 
 
 \date{}
-\author{Michał  Burdukiewicz\inst{1}, Piotr Sobczyk\inst{2}, Małgorzata Kotulska\inst{3}, \\ Paweł Mackiewicz\inst{1}}
+\author{Michał  Burdukiewicz\inst{1}, Piotr Sobczyk\inst{2}, Małgorzata Kotulska\inst{3}, \\Paweł Mackiewicz\inst{1}}
 \institute{\inst{1} University of Wrocław, Department of Genomics, Poland \and %
 \inst{2} Wrocław University of Technology, Institute of Mathematics and Computer Science, Poland \and
 \inst{3} Wrocław University of Technology, Department of Biomedical Engineering, Poland}
@@ -95,17 +95,6 @@ tfres <- function(x, cn = c("1-ngram", "2-gram", "3-gram"),
 \end{frame}
 }
 
-\AtBeginSubsection[]
-{
-\begin{frame}<beamer>
-\frametitle{Outline}
-\tableofcontents[currentsection]
-\end{frame}
-}
-
-
-\section{Biological sequence analysis}
-
 \section{biogram}
 
 \begin{frame}
@@ -120,7 +109,7 @@ Aim: convert \textbf{bio}logical sequences to n-\textbf{grams}, continuous or di
 
 <<echo = FALSE,message=FALSE,results='asis'>>=
 
-sample_seq <- matrix(sample(1L:4, 18, replace = TRUE), nrow = 3)
+sample_seq <- matrix(sample(c("a", "c", "g", "t"), 18, replace = TRUE), nrow = 3)
 print(xtable(data.frame(sample_seq), caption = "Sample sequences.", digits = 0))
 @
 \end{frame}
@@ -129,9 +118,9 @@ print(xtable(data.frame(sample_seq), caption = "Sample sequences.", digits = 0))
 
 
 <<echo = FALSE,message=FALSE,results='asis'>>=
-unis <- count_ngrams(sample_seq, 1, 1L:4)
+unis <- count_ngrams(sample_seq, 1, c("a", "c", "g", "t"))
 unis <- data.frame(as.matrix(unis))
-colnames(unis) <- 1L:4
+colnames(unis) <- c("a", "c", "g", "t")
 print(xtable(unis, caption = "Unigrams.", digits = 0), include.rownames = FALSE)
 @
 \end{frame}
@@ -140,7 +129,7 @@ print(xtable(unis, caption = "Unigrams.", digits = 0), include.rownames = FALSE)
 
 
 <<echo = FALSE,message=FALSE,results='asis'>>=
-unis <- count_ngrams(sample_seq, 1, 1L:4, pos = TRUE)
+unis <- count_ngrams(sample_seq, 1, c("a", "c", "g", "t"), pos = TRUE)
 unis <- data.frame(as.matrix(unis))[, 1L:7]
 print(xtable(unis, caption = "A fraction of possible unigrams with position information.", digits = 0), include.rownames = FALSE)
 @
@@ -161,7 +150,7 @@ $$
 \begin{frame}
 \centering
 \scalebox{0.75}{  
-<<echo = FALSE,message=FALSE,fig.align='center'>>=
+<<echo = FALSE,message=FALSE,fig.align='center', fig.height=6>>=
 n <- 1:5
 n_max <- 4^n
 
@@ -197,9 +186,8 @@ Solutions:
 \begin{frame}
 Existing encodings of amino acids:
 \begin{itemize}
-\item Orthogonal (20 bites).
-\item Orthogonal (5 bites).
-\item Codon.
+\item Orthogonal (20 bits, Ala = 10000000000000000000, Cys = 01000000000000000000, \dots).
+\item Orthogonal (5 bits, Ala = 00001, Cys = 00011, \dots).
 \item Exchange groups.
 \end{itemize}
 \end{frame}
@@ -207,7 +195,7 @@ Existing encodings of amino acids:
 \begin{frame}
 Drawbacks:
 \begin{itemize}
-\item Does not take into account relationships between amino acids (orthogonal encodings) or uses all avaible information introducing noise (codon and exchange group).
+\item Does not take into account relationships between amino acids (orthogonal encodings) or employs only selected relationships (exchange group).
 \item parse encoding enforces larger data sets, which hinders their management and analysis~\cite{2002linamino}.
 \end{itemize}
 \end{frame}
@@ -403,9 +391,9 @@ Amyloids:
 
 \begin{enumerate}[1.]
 \item<1-> Sequences shorter than 6 amino acids were discarded.
-\item<2-> From each sequence overlapping 6-grams were extracted. All n-grams were labelled as their sequence of the origin (e.g. all 5-grams extracted from amyloid sequence were labelled as positive).
+\item<2-> From each sequence overlapping 6-grams were extracted. All n-grams were labelled as their sequence of the origin (e.g. all 6-grams extracted from amyloid sequence were labelled as positive).
 \item<3-> For each encoding features were filtered by the QuiPT and used to train the Random Forests~\cite{liaw_classification_2002}. This procedure was performed independently on three training sets: a) 6 amino acids, b) 10 amino acids or shorter, c) 15 amino acids or shorter creating three classifiers.
-\item<4-> All classifiers were evaluated in the 5-fold cross-validation eight times. The sequence was labelled as positive (amylogenic), if at least one 5-gram was assessed as amylogenic.
+\item<4-> All classifiers were evaluated in the 5-fold cross-validation eight times. The sequence was labelled as positive (amylogenic), if at least one 6-gram was assessed as amylogenic.
 \end{enumerate}
 
 \end{frame}
@@ -483,9 +471,11 @@ During the test phase, each protein was fitted to two models. The outcome consis
 \end{frame}
 
 \begin{frame}
+
+\begin{columns}
+\column{.4\textwidth}
+
 \begin{table}[ht]
-\small
-\begin{minipage}{.5\linewidth} 
 \centering
 \caption{The best sensitivity (final) encoding.} 
 \begin{tabular}{l}
@@ -499,8 +489,11 @@ D, E, H, K, N, Q, R \\
    \bottomrule
 \end{tabular}
 \label{tab:best}
-\end{minipage}
-\begin{minipage}{.5\linewidth} 
+\end{table}
+
+\column{.4\textwidth}
+
+\begin{table}[ht]
 \centering
 \caption{The best specificity encoding.} 
 \begin{tabular}{l}
@@ -514,8 +507,12 @@ A, E, K, Q, R \\
    \bottomrule
 \end{tabular}
 \label{tab:worst}
-\end{minipage}
 \end{table}
+
+\end{columns}
+
+Encoding distance: 8.
+
 \end{frame}
 
 \begin{frame}
@@ -555,6 +552,10 @@ signalP 4.1 (no tm) \shortcite{petersen_signalp_2011} & 0.8356 & 0.7745 & 0.8966
 
 \begin{frame}
 biogram R package: \url{http://cran.r-project.org/web/packages/biogram/}
+
+\medskip
+
+biogram source: \url{https://github.com/michbur/biogram}
 \end{frame}
 
 
