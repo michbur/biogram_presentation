@@ -38,7 +38,7 @@ library(biogram)
 library(ggplot2)
 library(reshape2)
 
-size_mod = -1
+size_mod = 0
 cool_theme <- theme(plot.background=element_rect(fill = "transparent",
                                                  colour = "transparent"),
                     panel.grid.major = element_line(colour="lightgrey", linetype = "dashed"),
@@ -145,6 +145,15 @@ Number of possible positioned n-grams:
 $$
 n_{max} = L \times m^n
 $$
+
+\begin{itemize}
+\item $n_max$: total number of n-grams.
+\item $L$: length of the sequence.
+\item $m$: number of unique symbols in the alphabet.
+\item $n$: length of the n-gram.
+\end{itemize}
+
+
 \end{frame}
 
 \begin{frame}
@@ -314,48 +323,7 @@ Test statistics used by QuiPT (information gain, Kullback-Leibler divergence) me
 
 \end{frame}
 
-\begin{frame}
-If probability that target equals 1 is $p$ and probability that feature equals
-1 is $q$ and feature and target are independent then each of them has the 
-following probabilities 
-$$P(Target, Feature) = (1,1)) = p \cdot q$$
-$$P(Target, Feature) = (1,0)) = p \cdot (1-q)$$
-$$P(Target, Feature) = (0,1)) = (1-p) \cdot q$$
-$$P(Target, Feature) = (0,0)) = (1-p) \cdot (1-q)$$
-\end{frame}
 
-
-\begin{frame}
-\begin{itemize}
-\item<1-> $n_{1,1}$ is from range $[0,min(n_{\cdot, 1}, n_{1, \cdot})]$.
-\item<2-> The probability of certain contingency table is given as the conditional distribution, as impose restrictions on two parameters $n_{\cdot, 1} $ and $n_{1, \cdot}$.
-\item<3-> The test statistic is computed for each possible value of $n_{1,1}$.
-\item<4-> The distribution of test statistics under hypothesis that target and feature
-are independant is computed using values from 3. 
-\end{itemize}
-
-\end{frame}
-
-
-%' \begin{frame}
-%' 
-%' \begin{columns}[c] 
-%'     \column{.7\textwidth} 
-%'     \scalebox{0.95}{
-%' <<echo = FALSE,message=FALSE,fig.align='center'>>=
-%' target_feature <- create_feature_target(50, 50, 50, 50)
-%' tmp <- distr_crit(target = target_feature[,1], feature = target_feature[,2])
-%' plot(tmp)
-%' @
-%' }
-%' \column{.5\textwidth}
-%' <<echo = FALSE,message=FALSE,results='asis'>>=
-%' tab <- data.frame(table(target_feature[, 1], target_feature[, 2]))
-%' colnames(tab) <- c("Target", "Feature", "Freq")
-%' xtable(tab)
-%' @
-%'     \end{columns}
-%' \end{frame}
 
 \begin{frame}
 
@@ -477,41 +445,47 @@ During the test phase, each protein was fitted to two models. The outcome consis
 
 \begin{table}[ht]
 \centering
-\caption{The best sensitivity (final) encoding.} 
-\begin{tabular}{l}
+\caption{The best AUC encoding.} 
+\begin{tabular}{r | l}
   \toprule
-Groups \\ 
+ID & Amino acids \\ 
   \midrule
-D, E, H, K, N, Q, R \\ 
-   \rowcolor[gray]{0.85}G, P, S, T, Y \\ 
-  F, I, L, M, V, W \\ 
-   \rowcolor[gray]{0.85}A, C \\ 
+I & D, E, H, K, N, Q, R \\ 
+   \rowcolor[gray]{0.85}II & G, P, S, T, Y \\ 
+III &  F, I, L, M, V, W \\ 
+\rowcolor[gray]{0.85}IV &  A, C \\ 
    \bottomrule
 \end{tabular}
 \label{tab:best}
 \end{table}
 
-\column{.4\textwidth}
+\column{.6\textwidth}
 
-\begin{table}[ht]
 \centering
-\caption{The best specificity encoding.} 
-\begin{tabular}{l}
-  \toprule
-Groups \\ 
-  \midrule
-A, E, K, Q, R \\ 
-   \rowcolor[gray]{0.85}D, G, N, P, S, T \\ 
-  C, H, I, L, M, V \\ 
-   \rowcolor[gray]{0.85}F, W, Y \\ 
-   \bottomrule
-\end{tabular}
-\label{tab:worst}
-\end{table}
+
+<<echo = FALSE,message=FALSE,fig.align='center', fig.height=8>>=
+load("signalHsmm_groups.RData")
+levels(deg_region[["enc"]]) <- c("Best AUC", "Worst AUC")
+levels(deg_region[["region"]]) <- c("n", "h", "c", "Mature\nprotein")
+levels(deg_region[["group"]]) <- c("I", "II", "III", "IV")
+
+ggplot(deg_region[deg_region[["enc"]] == "Best AUC", ], aes(x = region, y = freq, fill = group)) +
+  geom_bar(stat = "identity", position = "dodge") + 
+  scale_y_continuous("Frequency") +
+  scale_x_discrete("Region\n") +
+  scale_fill_discrete("ID") +
+  guides(colour = FALSE) +
+  cool_theme
+
+@
+
 
 \end{columns}
 
-Encoding distance: 8.
+\end{frame}
+
+
+\begin{frame}
 
 \end{frame}
 
@@ -542,7 +516,9 @@ signalP 4.1 (no tm) \shortcite{petersen_signalp_2011} & 0.8356 & 0.7745 & 0.8966
 \section{Conclusion}
 
 \begin{frame}
-\textbf{biogram} is universal and efficient toolkit for analysis of biological sequences.
+
+\textbf{biogram} is a flexible toolkit for analysis of biological sequences. It reduces efficiently feature space by extracting important features and removing redundant information.
+
 \end{frame}
 
 
@@ -559,10 +535,34 @@ biogram source: \url{https://github.com/michbur/biogram}
 \end{frame}
 
 
-
 \begin{frame}[allowframebreaks]
 \bibliographystyle{apacite}
 \bibliography{document.bib}
 \end{frame}
+
+\begin{frame}
+
+\begin{table}[ht]
+\small
+\centering
+\caption{Comparison of Area Under the Curve, Sensitivity, Specificity and Matthews Correlation Coefficient for different classifiers.} 
+\begin{tabular}{lrrrr}
+  \toprule
+Software name & AUC & Sensitivity & Specificity \\ 
+  \midrule
+signalP 4.1 (no tm) \shortcite{petersen_signalp_2011} & 0.9416 & \textbf{0.9720} & 0.9112 \\ 
+   \rowcolor[gray]{0.85}signalP 4.1 (tm) \shortcite{petersen_signalp_2011} & \textbf{0.9673} & 0.9579 & \textbf{0.9766} \\ 
+  PrediSi \shortcite{hiller_predisi:_2004} & 0.8949 & 0.9065 & 0.8832 \\ 
+   \rowcolor[gray]{0.85}Phobius \shortcite{kall_combined_2004} & 0.9509 & 0.9673 & 0.9346 \\ 
+  Philius \shortcite{reynolds_transmembrane_2008} & 0.9369 & 0.9533 & 0.9206 \\ 
+   \rowcolor[gray]{0.85}signalHsmm-2010 & 0.9526 & 0.9533 & 0.8832 \\ 
+  signalHsmm-1989 & 0.9562 & 0.9626 & 0.8972 \\ 
+   \bottomrule
+\end{tabular}
+\label{tab:bench2010}
+\end{table}
+
+\end{frame}
+
 
 \end{document}
