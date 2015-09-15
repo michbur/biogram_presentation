@@ -372,26 +372,40 @@ Amyloids:
 \small{
 \begin{tabular}{c|c|c|c|c|c}
   \toprule
-Training length & Number of groups & ID & AUC & Specificity & Sensitivity \\ 
+Training length & Number of groups & AUC & Specificity & Sensitivity \\ 
   \midrule
-6 & 3 & 6 & 0.7955 & 0.8221 & 0.6181 \\ 
-   \rowcolor[gray]{0.75}6 & 4 & 45 & 0.8183 & 0.9014 & 0.5038 \\ 
-  $<$11 & 4 & 2 & 0.6615 & 0.4304 & 0.8307 \\ 
-   \rowcolor[gray]{0.75}$<$11 & 3 & 15 & 0.8088 & 0.8329 & 0.6060 \\ 
-  $<$16 & 3 & 16 & 0.8162 & 0.7477 & 0.7374 \\ 
-   \rowcolor[gray]{0.75}$<$16 & 6 & 87 & 0.8320 & 0.5186 & 0.9195 \\ 
+   6 & 4 & 0.8183 & 0.9014 & 0.5038 \\ 
+   \rowcolor[gray]{0.75}$<$16 & 6 & 0.8320 & 0.5186 & 0.9195 \\ 
    \bottomrule
 \end{tabular}
 }
-\caption{Encodings with the best sensitivity and specificity for each training set type.} 
+\caption{Encodings with the best sensitivity and specificity.} 
 \end{table}
+
+The committee of the best specificity and best sensitivity classifiers has overall $0.8911$ AUC, $0.7473$ sensitivity and $0.8684$ specificity.
+
 \end{frame}
 
 \begin{frame}
-The best specificity encoding (training length 6, 4 groups, encoding ID 45) and the best sensitivity (training length $<$16, 6 groups, encoding ID 87) seem to have the different areas of the competence.
+The committee was compared to the two best-performing classifiers.
 
-The committee of the best specificity and best sensitivity classifiers has overall $0.8911$ AUC, $0.7473$ sensitivity and $0.8684$ specificity.
+\begin{table}[ht]
+\centering
+\caption{Benchmark of three best-performing classifiers on Pep424 data set~\cite{walsh_pasta_2014}.} 
+\begin{tabular}{l | l}
+  \toprule
+Name & AUC \\ 
+  \midrule
+PASTA 2.0~\shortcite{walsh_pasta_2014} & 0.8573 \\ 
+   \rowcolor[gray]{0.85}Committee & 0.8390 \\ 
+FoldAmyloid~\shortcite{garbuzynskiy_foldamyloid:_2010} & 0.8331 \\ 
+
+   \bottomrule
+\end{tabular}
+\label{tab:best}
+\end{table}
 \end{frame}
+
 
 \section{Case study 2: signal peptide prediction}
 
@@ -486,10 +500,6 @@ ggplot(deg_region[deg_region[["enc"]] == "Best AUC", ], aes(x = region, y = freq
 
 
 \begin{frame}
-
-\end{frame}
-
-\begin{frame}
 \begin{table}[ht]
 \centering
 \caption{Comparison of Area Under the Curve, H-measure and Matthews Correlation Coefficient for different classifiers considering only proteins belonging to Plasmodiidae.} 
@@ -537,7 +547,7 @@ biogram source: \url{https://github.com/michbur/biogram}
 
 \begin{frame}[allowframebreaks]
 \bibliographystyle{apacite}
-\bibliography{document.bib}
+\bibliography{document}
 \end{frame}
 
 \begin{frame}
