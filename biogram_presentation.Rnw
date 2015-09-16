@@ -368,26 +368,24 @@ Amyloids:
 \end{frame}
 
 \begin{frame}
+<<AmyLoadPlot, echo = FALSE, message=FALSE, fig.width=14>>=
+#ggplot(seq_inter_ct, aes(x = len, y = prop, fill = tar, label = paste0(round(prop, 4) * 100, "%"))) +
+load("poster_data.RData")
 
-\begin{enumerate}[1.]
-\item<1-> Nine scales representing properties important in the amylogenicity: hydrophobicity, size polarity and solvent accessibility from AAIndex database~\cite{kawashima_aaindex:_2008} were chosen. Additionally, two frequencies of forming contact sites~\cite{wozniak_characteristics_2014} were added. All scales were normalized.
-\item<2-> All combinations of characteristics (each time selecting only one scale per the property) were clustered using Euclidean distance and Ward's method.
-\item<3-> Each clustering was divided into 3 to 6 groups creating 144 encodings of amino acids.
-\item<4-> Redundant 51 encodings (identical to other encodings) were removed.
-\end{enumerate}
+ggplot(seq_inter_ct, aes(x = len, y = Freq, fill = tar, label = Freq)) +
+  geom_bar(position = "dodge", stat = "identity") +
+  scale_fill_manual("Amyloid", values = c("skyblue", "tan2")) +
+  scale_x_discrete("Sequence length") +
+  scale_y_continuous("Number of sequences") + 
+  geom_text(position = position_dodge(width = 0.9), vjust=-0.25) +
+  cool_theme #+ theme(legend.position = "right")
+@
 
+Source of physicochemical properties:~\citeA{kawashima_aaindex:_2008}.
+Source of amyloid and non-amyloid sequences:~\citeA{wozniak_amyload:_2015}.
 \end{frame}
 
-\begin{frame}
 
-\begin{enumerate}[1.]
-\item<1-> Sequences shorter than 6 amino acids were discarded.
-\item<2-> From each sequence overlapping 6-grams were extracted. All n-grams were labelled as their sequence of the origin (e.g. all 6-grams extracted from amyloid sequence were labelled as positive).
-\item<3-> For each encoding features were filtered by the QuiPT and used to train the Random Forests~\cite{liaw_classification_2002}. This procedure was performed independently on three training sets: a) 6 amino acids, b) 10 amino acids or shorter, c) 15 amino acids or shorter creating three classifiers.
-\item<4-> All classifiers were evaluated in the 5-fold cross-validation eight times. The sequence was labelled as positive (amylogenic), if at least one 6-gram was assessed as amylogenic.
-\end{enumerate}
-
-\end{frame}
 
 \begin{frame}
 \begin{table}[ht]
@@ -410,7 +408,73 @@ The committee of the best specificity and best sensitivity classifiers has overa
 \end{frame}
 
 \begin{frame}
-The committee was compared to the two best-performing classifiers.
+
+\begin{columns}
+\column{.4\textwidth}
+
+\begin{table}[ht]
+\centering
+\caption{The best specificity encoding.} 
+\begin{tabular}{r | l}
+  \toprule
+ID & Amino acids \\ 
+  \midrule
+I & H, M \\ 
+   \rowcolor[gray]{0.85}II & F, W, Y \\ 
+III &  C, I, L, V \\ 
+\rowcolor[gray]{0.85}IV &  A, D, E, G, K, N, P, Q, R, S, T \\ 
+   \bottomrule
+\end{tabular}
+\label{tab:best}
+\end{table}
+
+\column{.4\textwidth}
+
+\begin{table}[ht]
+\centering
+\caption{The best sensitivity encoding.} 
+\begin{tabular}{r | l}
+  \toprule
+ID & Amino acids \\ 
+  \midrule
+I & A, T \\ 
+   \rowcolor[gray]{0.85}II & D, E, N \\ 
+III & G, P, S \\ 
+\rowcolor[gray]{0.85}IV &  F, W, Y \\ 
+V & H, K, Q, R \\ 
+\rowcolor[gray]{0.85}VI &  C, I, L, M, V \\ 
+   \bottomrule
+\end{tabular}
+\label{tab:best}
+\end{table}
+
+\end{columns}
+
+Encoding distance between two encodings: 8.
+
+\end{frame}
+
+
+
+\begin{frame}
+<<echo = FALSE,message=FALSE,fig.align='center', fig.height=5>>=
+load("biogram_presentation_specsens.RData")
+levels(amylo_freq[["tar"]]) <- c("yes", "no")
+ggplot(amylo_freq, aes(x = variable, y = freq, fill = tar, colour = tar)) +
+  geom_bar(stat = "identity", position = "dodge") + 
+  scale_y_continuous("Frequency") +
+  scale_x_discrete("Group ID\n") +
+  scale_fill_manual("Amyloid", values = c("no" = "skyblue", "yes" = "tan2")) +
+  scale_colour_manual("Amyloid", values = c("no" = "skyblue", "yes" = "tan2")) +
+  facet_wrap(~ enc, scales = "free_x") +
+  guides(colour = FALSE) +
+  cool_theme
+
+@
+\end{frame}
+
+\begin{frame}
+The committee was compared to the two best-performing predictors of amyloids
 
 \begin{table}[ht]
 \centering
@@ -420,7 +484,7 @@ The committee was compared to the two best-performing classifiers.
 Name & AUC \\ 
   \midrule
 PASTA 2.0~\shortcite{walsh_pasta_2014} & 0.8573 \\ 
-   \rowcolor[gray]{0.85}Committee & 0.8390 \\ 
+   \rowcolor[gray]{0.85}Committee & 0.8410 \\ 
 FoldAmyloid~\shortcite{garbuzynskiy_foldamyloid:_2010} & 0.8331 \\ 
 
    \bottomrule
@@ -428,6 +492,7 @@ FoldAmyloid~\shortcite{garbuzynskiy_foldamyloid:_2010} & 0.8331 \\
 \label{tab:best}
 \end{table}
 \end{frame}
+
 
 
 \section{Case study 2: signal peptide prediction}
@@ -640,5 +705,26 @@ xtable(tab)
     \end{columns}
 \end{frame}
 
+\begin{frame}
+
+\begin{enumerate}[1.]
+\item Nine scales representing properties important in the amylogenicity: hydrophobicity, size polarity and solvent accessibility from AAIndex databasewere chosen. Additionally, two frequencies of forming contact sites~\cite{wozniak_characteristics_2014} were added. All scales were normalized.
+\item All combinations of characteristics (each time selecting only one scale per the property) were clustered using Euclidean distance and Ward's method.
+\item Each clustering was divided into 3 to 6 groups creating 144 encodings of amino acids.
+\item Redundant 51 encodings (identical to other encodings) were removed.
+\end{enumerate}
+
+\end{frame}
+
+\begin{frame}
+
+\begin{enumerate}[1.]
+\item Sequences shorter than 6 amino acids were discarded.
+\item From each sequence overlapping 6-grams were extracted. All n-grams were labelled as their sequence of the origin (e.g. all 6-grams extracted from amyloid sequence were labelled as positive).
+\item For each encoding features were filtered by the QuiPT and used to train the Random Forests~\cite{liaw_classification_2002}. This procedure was performed independently on three training sets: a) 6 amino acids, b) 10 amino acids or shorter, c) 15 amino acids or shorter creating three classifiers.
+\item All classifiers were evaluated in the 5-fold cross-validation eight times. The sequence was labelled as positive (amylogenic), if at least one 6-gram was assessed as amylogenic.
+\end{enumerate}
+
+\end{frame}
 
 \end{document}
