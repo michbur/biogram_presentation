@@ -305,6 +305,23 @@ sequence ID & feature    & target   &  \\ \hline
 
 \begin{frame}
 
+\begin{columns}
+\column{.4\textwidth}
+\begin{table}
+\begin{tabular}{c || c c }
+sequence ID & feature    & target   &  \\ \hline
+1 & 1 & 0 &  \\ 
+2 & 1 & 0 & \\ 
+3 & 0 & 0 & \\ 
+4 & 1 & 1 & \\ 
+5 & 0 & 1 & \\ 
+\ldots & \ldots & \ldots & 
+\end{tabular}
+
+\caption{Positioned n-grams with a label.}
+\end{table}
+\column{.4\textwidth}
+
 \begin{table}
 \begin{tabular}{c || c c }
   & target    & feature   &  \\ \hline \hline
@@ -315,11 +332,19 @@ sequence ID & feature    & target   &  \\ \hline
 \caption{Contingency table.}
 \end{table}
 
+\end{columns}
+
+
+
+
 \end{frame}
 
 \begin{frame}
 
 Test statistics used by QuiPT (information gain, Kullback-Leibler divergence) measure inbalance of contingency tables.
+
+\medskip
+The probability of certain contingency table is given as the conditional distribution, as impose restrictions on two parameters $n_{\cdot, 1} $ and $n_{1, \cdot}$. The test statistic is computed for each possible value of $n_{1,1}$.
 
 \end{frame}
 
@@ -572,6 +597,49 @@ signalP 4.1 (no tm) \shortcite{petersen_signalp_2011} & 0.9416 & \textbf{0.9720}
 \label{tab:bench2010}
 \end{table}
 
+\end{frame}
+
+\begin{frame}
+If probability that target equals 1 is $p$ and probability that feature equals
+1 is $q$ and feature and target are independent then each of them has the 
+following probabilities 
+$$P(Target, Feature) = (1,1)) = p \cdot q$$
+$$P(Target, Feature) = (1,0)) = p \cdot (1-q)$$
+$$P(Target, Feature) = (0,1)) = (1-p) \cdot q$$
+$$P(Target, Feature) = (0,0)) = (1-p) \cdot (1-q)$$
+\end{frame}
+
+
+\begin{frame}
+\begin{itemize}
+\item $n_{1,1}$ is from range $[0,min(n_{\cdot, 1}, n_{1, \cdot})]$.
+\item The probability of certain contingency table is given as the conditional distribution, as impose restrictions on two parameters $n_{\cdot, 1} $ and $n_{1, \cdot}$.
+\item The test statistic is computed for each possible value of $n_{1,1}$.
+\item The distribution of test statistics under hypothesis that target and feature
+are independant is computed using values from 3. 
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+
+\begin{columns}[c] 
+    \column{.7\textwidth} 
+    \scalebox{0.95}{
+<<echo = FALSE,message=FALSE,fig.align='center'>>=
+target_feature <- create_feature_target(50, 50, 50, 50)
+tmp <- distr_crit(target = target_feature[,1], feature = target_feature[,2])
+plot(tmp)
+@
+}
+\column{.5\textwidth}
+<<echo = FALSE,message=FALSE,results='asis'>>=
+tab <- data.frame(table(target_feature[, 1], target_feature[, 2]))
+colnames(tab) <- c("Target", "Feature", "Freq")
+xtable(tab)
+@
+    \end{columns}
 \end{frame}
 
 
