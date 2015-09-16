@@ -110,20 +110,37 @@ Aim: convert \textbf{bio}logical sequences to n-\textbf{grams}, continuous or di
 <<echo = FALSE,message=FALSE,results='asis'>>=
 
 sample_seq <- matrix(sample(c("a", "c", "g", "t"), 18, replace = TRUE), nrow = 3)
-print(xtable(data.frame(sample_seq), caption = "Sample sequences.", digits = 0))
+dat <- data.frame(sample_seq)
+colnames(dat) <- paste0("P", 1L:6)
+rownames(dat) <- paste0("S", 1L:3)
+print(xtable(dat, caption = "Sample sequences.", digits = 0))
 @
 \end{frame}
 
 \begin{frame}
 
-
 <<echo = FALSE,message=FALSE,results='asis'>>=
 unis <- count_ngrams(sample_seq, 1, c("a", "c", "g", "t"))
 unis <- data.frame(as.matrix(unis))
 colnames(unis) <- c("a", "c", "g", "t")
-print(xtable(unis, caption = "Unigrams.", digits = 0), include.rownames = FALSE)
+rownames(unis) <- paste0("S", 1L:3)
+print(xtable(unis, caption = "Unigrams.", digits = 0))
 @
 \end{frame}
+
+
+
+\begin{frame}
+
+<<echo = FALSE,message=FALSE,results='asis'>>=
+unis <- count_ngrams(sample_seq, 2, c("a", "c", "g", "t"))
+unis <- data.frame(as.matrix(unis))[, 1L:4]
+colnames(unis) <- sapply(strsplit(colnames(unis), "_", fixed = TRUE), function(i) i[1])
+rownames(unis) <- paste0("S", 1L:3)
+print(xtable(unis, caption = "Bigrams.", digits = 0))
+@
+\end{frame}
+
 
 \begin{frame}
 
@@ -131,7 +148,9 @@ print(xtable(unis, caption = "Unigrams.", digits = 0), include.rownames = FALSE)
 <<echo = FALSE,message=FALSE,results='asis'>>=
 unis <- count_ngrams(sample_seq, 1, c("a", "c", "g", "t"), pos = TRUE)
 unis <- data.frame(as.matrix(unis))[, 1L:7]
-print(xtable(unis, caption = "A fraction of possible unigrams with position information.", digits = 0), include.rownames = FALSE)
+colnames(unis) <- substr(colnames(unis), 2, 4)
+rownames(unis) <- paste0("S", 1L:3)
+print(xtable(unis, caption = "A fraction of possible unigrams with position information.", digits = 0))
 @
 
 Positioned n-gram data is binary.
