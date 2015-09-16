@@ -205,14 +205,12 @@ Existing encodings of amino acids:
 Drawbacks:
 \begin{itemize}
 \item Does not take into account relationships between amino acids (orthogonal encodings) or employs only selected relationships (exchange group).
-\item parse encoding enforces larger data sets, which hinders their management and analysis~\cite{2002linamino}.
+\item Sparser encoding requires larger data sets.~\cite{2002linamino}.
 \end{itemize}
 \end{frame}
 
 \begin{frame}
-Amino acids may be assigned to groups based on their physicochemical similarity.
-
-Every problem may have its own set of important physicochemical properties. 
+Clustering of amini acids using a set of physicochemical properties specific for a given problem removes redundant information and simplifies model.
 \end{frame}
 
 
