@@ -406,11 +406,13 @@ ggplot(seq_inter_ct, aes(x = len, y = Freq, fill = tar, label = Freq)) +
   scale_x_discrete("Sequence length") +
   scale_y_continuous("Number of sequences") + 
   geom_text(position = position_dodge(width = 0.9), vjust=-0.25) +
-  cool_theme #+ theme(legend.position = "right")
+  cool_theme +
+  ggtitle("AmyLoad database")#+ theme(legend.position = "right")
 @
 
 Source of physicochemical properties:~\citeA{kawashima_aaindex:_2008}.
 Source of amyloid and non-amyloid sequences:~\citeA{wozniak_amyload:_2015}.
+Algorithm:~\citeA{liaw_classification_2002}.
 \end{frame}
 
 
