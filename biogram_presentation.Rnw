@@ -147,7 +147,7 @@ n_{max} = L \times m^n
 $$
 
 \begin{itemize}
-\item $n_max$: total number of n-grams.
+\item $n_{max}$: total number of n-grams.
 \item $L$: length of the sequence.
 \item $m$: number of unique symbols in the alphabet.
 \item $n$: length of the n-gram.
@@ -180,7 +180,7 @@ ggplot(dat, aes(x = n, y = n_max, fill = L, col = L)) +
 
 
 \begin{frame}
-Encodings based on n-grams are cumbersome to use without the reduction of the dimensionality.
+The n-gram data is cumbersome to use without the reduction of the dimensionality.
 \medskip
 Solutions:
 \begin{itemize}
@@ -205,47 +205,47 @@ Existing encodings of amino acids:
 Drawbacks:
 \begin{itemize}
 \item Does not take into account relationships between amino acids (orthogonal encodings) or employs only selected relationships (exchange group).
-\item Sparser encoding requires larger data sets.~\cite{2002linamino}.
+\item Sparse encoding requires large data sets~\cite{2002linamino}.
 \end{itemize}
 \end{frame}
 
 \begin{frame}
-Clustering of amini acids using a set of physicochemical properties specific for a given problem removes redundant information and simplifies model.
+Clustering of amino acids using a set of physicochemical properties specific for a given problem removes redundant information and simplifies model.
 \end{frame}
 
 
-\begin{frame}
-
-The encoding distance between \textbf{A} and \textbf{B} is defined as the minimum number of amino acids that have to be shifted between subgroups of encoding \textbf{A} to make it identical to \textbf{B} (order of subgroups in the encoding and amino acids in a group is unimportant).
-
-\begin{columns}
-\column{.4\textwidth}
-<<encodingDistanceA, echo = FALSE, message=FALSE, results='asis'>>=
-enc2df <- function(x)
-  data.frame(Group = names(x), Elements = sapply(x, paste0, collapse = ", "))
-l1 <- list('1' = c("a", "b", "c"),
-             '2' = c("d", "e"))
-l2 <- list('1' = c("a", "b"),
-             '2' = c("d", "e"),
-            '3' = c("c"))
-tmp <- enc2df(l1)
-rws <- seq(1, nrow(tmp) - 1, by = 2)
-col <- rep("\\rowcolor[gray]{0.75}", length(rws))
-print(xtable(tmp, "Encoding \\textbf{A}.", align = "cc|l"), include.rownames = FALSE, booktabs = TRUE, add.to.row = list(pos = as.list(rws), command = col))
-@
-\column{.4\textwidth}
-
-<<encodingDistanceB, echo = FALSE, message=FALSE, results='asis'>>=
-tmp <- enc2df(l2)
-rws <- seq(1, nrow(tmp) - 1, by = 2)
-col <- rep("\\rowcolor[gray]{0.75}", length(rws))
-print(xtable(tmp, "Encoding \\textbf{B}.", align = "cc|l"), include.rownames = FALSE, booktabs = TRUE, add.to.row = list(pos = as.list(rws), command = col))
-@
-\end{columns}
-
-The encoding distance between \textbf{A} and \textbf{B} is 1 (element \textit{c} must be moved from Group 3 to Group 1).
-
-\end{frame}
+%' \begin{frame}
+%' 
+%' The encoding distance between \textbf{A} and \textbf{B} is defined as the minimum number of amino acids that have to be shifted between subgroups of encoding \textbf{A} to make it identical to \textbf{B} (order of subgroups in the encoding and amino acids in a group is unimportant).
+%' 
+%' \begin{columns}
+%' \column{.4\textwidth}
+%' <<encodingDistanceA, echo = FALSE, message=FALSE, results='asis'>>=
+%' enc2df <- function(x)
+%'   data.frame(Group = names(x), Elements = sapply(x, paste0, collapse = ", "))
+%' l1 <- list('1' = c("a", "b", "c"),
+%'              '2' = c("d", "e"))
+%' l2 <- list('1' = c("a", "b"),
+%'              '2' = c("d", "e"),
+%'             '3' = c("c"))
+%' tmp <- enc2df(l1)
+%' rws <- seq(1, nrow(tmp) - 1, by = 2)
+%' col <- rep("\\rowcolor[gray]{0.75}", length(rws))
+%' print(xtable(tmp, "Encoding \\textbf{A}.", align = "cc|l"), include.rownames = FALSE, booktabs = TRUE, add.to.row = list(pos = as.list(rws), command = col))
+%' @
+%' \column{.4\textwidth}
+%' 
+%' <<encodingDistanceB, echo = FALSE, message=FALSE, results='asis'>>=
+%' tmp <- enc2df(l2)
+%' rws <- seq(1, nrow(tmp) - 1, by = 2)
+%' col <- rep("\\rowcolor[gray]{0.75}", length(rws))
+%' print(xtable(tmp, "Encoding \\textbf{B}.", align = "cc|l"), include.rownames = FALSE, booktabs = TRUE, add.to.row = list(pos = as.list(rws), command = col))
+%' @
+%' \end{columns}
+%' 
+%' The encoding distance between \textbf{A} and \textbf{B} is 1 (element \textit{c} must be moved from Group 3 to Group 1).
+%' 
+%' \end{frame}
 
 \subsection{Quick Permutation Test (QuiPT)}
 
@@ -450,10 +450,7 @@ V & H, K, Q, R \\
 
 \end{columns}
 
-Encoding distance between two encodings: 8.
-
 \end{frame}
-
 
 
 \begin{frame}
@@ -463,7 +460,7 @@ levels(amylo_freq[["tar"]]) <- c("yes", "no")
 ggplot(amylo_freq, aes(x = variable, y = freq, fill = tar, colour = tar)) +
   geom_bar(stat = "identity", position = "dodge") + 
   scale_y_continuous("Frequency") +
-  scale_x_discrete("Group ID\n") +
+  scale_x_discrete("Group ID\n") + 
   scale_fill_manual("Amyloid", values = c("no" = "skyblue", "yes" = "tan2")) +
   scale_colour_manual("Amyloid", values = c("no" = "skyblue", "yes" = "tan2")) +
   facet_wrap(~ enc, scales = "free_x") +
@@ -501,9 +498,9 @@ FoldAmyloid~\shortcite{garbuzynskiy_foldamyloid:_2010} & 0.8331 \\
 \begin{frame}
 Secretory signal peptides:
 \begin{itemize}
-\item<1-> are short (20-30 residues) N-terminal amino acid sequences,
-\item<2-> direct a protein to the endomembrane system and next to the extracellular localization,
-\item<3-> possess three distinct domains with variable length and specific amino acid composition~\cite{hegde_surprising_2006}.
+\item<1-> Short (20-30 residues) N-terminal amino acid sequences.
+\item<2-> Direct a protein to the endomembrane system and next to the extracellular localization.
+\item<3-> Possess three distinct domains with variable length and specific amino acid composition~\cite{hegde_surprising_2006}.
 \end{itemize}
 \end{frame}
 
@@ -522,9 +519,9 @@ Secretory signal peptides:
 \begin{frame}
 Hidden semi-Markov models assumptions~\cite{rabiner, koski2001hidden}:
 \begin{itemize}
-\item<1-> the current region (state) of the sequence (process) depends on the previous region,
-\item<2-> regions may be only indirectly determined using amino acid residues (observations),
-\item<3-> probability of staying in a region is modeled by a probability distribution.
+\item<1-> The current region (state) of the sequence (process) depends on the previous region.
+\item<2-> Regions may be only indirectly determined using amino acid residues (observations).
+\item<3-> Probability of staying in a region is modeled by a probability distribution.
 \end{itemize}
 \end{frame}
 
@@ -632,7 +629,7 @@ biogram R package: \url{http://cran.r-project.org/web/packages/biogram/}
 biogram source: \url{https://github.com/michbur/biogram}
 \end{frame}
 
-
+\section{References}
 \begin{frame}[allowframebreaks]
 \bibliographystyle{apacite}
 \bibliography{document}
